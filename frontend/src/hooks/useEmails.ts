@@ -1,0 +1,4 @@
+import { useCallback, useEffect, useState } from 'react';
+import { emailApi } from '../services/api';
+import type { EmailJob, Paginated } from '../types';
+export function useEmails(kind: 'scheduled' | 'sent', page: number, query: string) { const [data, setData] = useState<Paginated<EmailJob> | null>(null); const [loading, setLoading] = useState(true); const load = useCallback(async () => { setLoading(true); try { const result = await emailApi.list(kind, page, query); setData('pages' in result.data ? result.data : { items: result.data.items, total: result.data.items.length, page: 1, pageSize: result.data.items.length, pages: 1 }); } finally { setLoading(false); } }, [kind, page, query]); useEffect(() => { void load(); }, [load]); return { data, loading, refresh: load }; }

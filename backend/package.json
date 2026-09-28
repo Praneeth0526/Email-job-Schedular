@@ -1,0 +1,49 @@
+{
+  "name": "email-scheduler-backend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"tsx watch src/server.ts\" \"tsx watch src/worker.ts\"",
+    "dev:server": "tsx watch src/server.ts",
+    "dev:worker": "tsx watch src/worker.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "start:worker": "node dist/worker.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev --name init",
+    "seed:ethereal": "tsx scripts/seedEthereal.ts",
+    "load-test": "tsx scripts/loadTest.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.662.0",
+    "@bull-board/express": "^6.5.0",
+    "@bull-board/api": "^6.5.0",
+    "@elastic/elasticsearch": "^8.15.0",
+    "bcryptjs": "^2.4.3",
+    "bullmq": "^5.21.2",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^6.9.15",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
+    "prisma": "^5.20.0",
+    "@prisma/client": "^5.20.0",
+    "redis": "^4.7.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.8",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "^22.7.5",
+    "@types/nodemailer": "^6.4.16",
+    "@types/passport-google-oauth20": "^2.0.16",
+    "concurrently": "^9.1.2",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.3"
+  }
+}

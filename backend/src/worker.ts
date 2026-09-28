@@ -1,0 +1,2 @@
+import { prisma } from './db/prisma.js'; import { connectRedis, redis } from './db/redis.js'; import { reconcileEmails } from './services/emailService.js'; import { startWorker } from './workers/emailWorker.js';
+await connectRedis(); await reconcileEmails(); const worker = await startWorker(); console.log('Email worker started'); async function shutdown() { await worker.close(); await redis.quit(); await prisma.$disconnect(); process.exit(0); } process.on('SIGINT', shutdown); process.on('SIGTERM', shutdown);

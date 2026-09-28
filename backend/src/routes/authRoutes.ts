@@ -1,0 +1,11 @@
+import { Router } from 'express';
+import jwt from 'jsonwebtoken';
+import { env } from '../config/env.js';
+import { prisma } from '../db/prisma.js';
+import { AuthRequest } from '../types/auth.js';
+const router = Router();
+router.get('/google', (_req, res) => { if (!env.GOOGLE_CLIENT_ID) return res.status(503).json({ error: 'Google OAuth is not configured' }); const params = new URLSearchParams({ client_id: env.GOOGLE_CLIENT_ID, redirect_uri: env.GOOGLE_CALLBACK_URL, response_type: 'code', scope: 'openid email profile', access_type: 'offline' }); res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params}`); });
+router.get('/google/callback', async (req, res) => { if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) return res.redirect(`${env.FRONTEND_URL}/login?error=oauth_not_configured`); const tokenResponse = await fetch('https://oauth2.googleapis.com/token', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: req.query.code, client_id: env.GOOGLE_CLIENT_ID, client_secret: env.GOOGLE_CLIENT_SECRET, redirect_uri: env.GOOGLE_CALLBACK_URL, grant_type: 'authorization_code' }) }); const tokens = await tokenResponse.json() as { access_token: string }; const profileResponse = await fetch('https://openidconnect.googleapis.com/v1/userinfo', { headers: { Authorization: `Bearer ${tokens.access_token}` } }); const profile = await profileResponse.json() as { sub: string; name: string; email: string; picture?: string }; const user = await prisma.user.upsert({ where: { googleId: profile.sub }, update: { name: profile.name, email: profile.email, avatar: profile.picture }, create: { googleId: profile.sub, name: profile.name, email: profile.email, avatar: profile.picture } }); res.cookie('token', jwt.sign({ userId: user.id }, env.JWT_SECRET, { expiresIn: '7d' }), { httpOnly: true, sameSite: 'lax', secure: env.NODE_ENV === 'production' }); res.redirect(env.FRONTEND_URL); });
+router.get('/me', async (req: AuthRequest, res) => { if (!req.userId) return res.status(401).json({ error: 'Authentication required' }); res.json(await prisma.user.findUnique({ where: { id: req.userId }, include: { slackConnection: { select: { teamName: true, channel: true } } } })); });
+router.post('/logout', (_req, res) => { res.clearCookie('token'); res.status(204).end(); });
+export default router;
